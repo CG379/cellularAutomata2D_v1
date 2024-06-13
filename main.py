@@ -15,6 +15,9 @@ import pygame as pg
 
 # Grid size
 n = 100
+alive_colour = (1,1,1)
+dead_colour = (0,0,0)
+# surface, color, rect, width=0, border_radius=1)
 
 
 # Build empty canvas
@@ -43,12 +46,21 @@ def main():
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 running = False
+            # Start if paused
+            elif event.key == pg.K_SPACE:
+                paused = True
+            # Pause if start
             elif event.type == pg.K_SPACE:
                 pause = True
-
-
-
+            # Reset board and pause
+            elif event.type == pg.K_r:
+                # Reset grid
+                pause = True
+            elif event.type == pg.MOUSEBUTTONDOWN and pause:
+            # pygame.draw.rect() # draws a rectangle 
+                return
     pg.quit()
+
 
 main()
 
