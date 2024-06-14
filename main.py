@@ -14,21 +14,29 @@ import numpy as np
 import pygame as pg
 
 # Grid size
-n = 1000
-alive_colour = (1,1,1)
-dead_colour = (0,0,0)
-# surface, color, rect, width=0, border_radius=1)
+n = 800
+alive_colour = (30,200,0)
+dead_colour = (30,30,30)
+cell_size = (15,15)
 
 
 # Build empty canvas
 def build_empty_grid(size):
-    return np.zeros((size,size))
+    return np.zeros((size,size), dtype=int)
 
 
 def update_grid(oldGrid):
     return
 
-# Draw shape
+# Draw grid
+def draw_grid(screen,grid):
+    for row in range(n):
+        for col in range(n):
+            if grid[row,col] == 1:
+                colour = alive_colour
+            else:
+                colour = dead_colour
+            pg.draw.rect(screen,colour,cell_size,border_radius=1)
 
 # Update grid
 
@@ -42,37 +50,74 @@ def main():
     screen = pg.display.set_mode((n,n))
     pg.display.set_caption("Cellular Automata: Conways's Game of Life")
     
+
+
+                
     grid = build_empty_grid(n)
 
     running = True
-    pause = False
+    paused = False
 
     while running:
+
         for event in pg.event.get():
+            # Quit conditions
             if event.type == pg.QUIT:
                 running = False
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    running = False
+                # Start if paused
+                elif event.key  == pg.K_SPACE and paused:
+                    paused = False
+                # Pause if start
+                elif event.type == pg.K_SPACE:
+                    paused = True
+                # Reset board and pause
+                elif event.type == pg.K_r:
+                    paused = True
+                    grid = build_empty_grid(n)
+            # User drawing
+            elif event.type == pg.MOUSEBUTTONDOWN and paused:
+                x,y = pg.mouse.get_pos()
+                
+            # Update grid for user
+            if not paused:
+                grid = update_grid(grid)
+            
+            
+
+                
+        screen.fill((0,0,0))
+        cell_rect = pg.Rect((10, 10), cell_size)
+        pg.draw.rect(screen, alive_colour, cell_rect)
+        draw_grid(screen,grid)
+        pg.display.flip()
+
+
+    pg.quit()
+
+if __name__ == "__main__":
+    main()
+
+'''
+            
             #Have to check for key press?
             elif event.type == pg.KEYDOWN:
                 # Start if paused
-                if event.k  == pg.K_SPACE:
-                    paused = True
+                if event.k  == pg.K_SPACE and paused:
+                    paused = False
                 # Pause if start
                 elif event.type == pg.K_SPACE:
-                    pause = True
+                    paused = True
                 # Reset board and pause
                 elif event.type == pg.K_r:
                     # Reset grid
-                    pause = True
-            elif event.type == pg.MOUSEBUTTONDOWN and pause:
+                    paused = True
+            elif event.type == pg.MOUSEBUTTONDOWN and paused:
             # pygame.draw.rect() # draws a rectangle 
-                return
-
-            if pause == False:
+                continue 
+            if paused == False:
                 grid = update_grid(grid)
-                
-    pg.quit()
 
-
-main()
-
-
+'''
