@@ -17,26 +17,25 @@ import pygame as pg
 n = 800
 alive_colour = (30,200,0)
 dead_colour = (30,30,30)
-cell_size = (15,15)
+cell_size = 15
 
+rows = n // 15
+cols = n // 15
 
 # Build empty canvas
 def build_empty_grid(size):
-    return np.zeros((size,size), dtype=int)
+    return np.zeros((size//cell_size,size//cell_size), dtype=int)
 
 
 def update_grid(oldGrid):
     return
 
 # Draw grid
-def draw_grid(screen,grid):
-    for row in range(n):
-        for col in range(n):
-            if grid[row,col] == 1:
-                colour = alive_colour
-            else:
-                colour = dead_colour
-            pg.draw.rect(screen,colour,cell_size,border_radius=1)
+def draw_grid(screen, grid):
+    for row in range(rows):
+        for col in range(cols):
+            color = ALIVE_COLOR if grid[row, col] == 1 else DEAD_COLOR
+            pg.draw.rect(screen, color, (col * cell_size, row * cell_size, cell_size - 1, cell_size - 1))
 
 # Update grid
 
@@ -49,10 +48,7 @@ def main():
     pg.init()
     screen = pg.display.set_mode((n,n))
     pg.display.set_caption("Cellular Automata: Conways's Game of Life")
-    
-
-
-                
+            
     grid = build_empty_grid(n)
 
     running = True
@@ -89,7 +85,7 @@ def main():
 
                 
         screen.fill((0,0,0))
-        cell_rect = pg.Rect((10, 10), cell_size)
+        cell_rect = pg.Rect((10, 10), (cell_size,cell_size))
         pg.draw.rect(screen, alive_colour, cell_rect)
         draw_grid(screen,grid)
         pg.display.flip()
