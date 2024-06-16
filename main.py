@@ -25,8 +25,7 @@ cols = n // 15
 grid = np.zeros((n//cell_size,n//cell_size), dtype=int)
 
 
-def update_grid():
-    return
+
 
 # Draw grid
 def draw_grid(screen):
@@ -36,10 +35,12 @@ def draw_grid(screen):
                 colour = alive_colour
             else:
                 colour = dead_colour
+            # function needs, screen colour and dimentions to draw
             pg.draw.rect(screen, colour,(col * cell_size, row * cell_size, cell_size - 1, cell_size - 1))
 
 # Update grid
-
+def update_grid():
+    return
 # Execute pattern
 # Pause function
 
