@@ -22,20 +22,21 @@ cell_size = 15
 rows = n // 15
 cols = n // 15
 
-# Build empty canvas
-def build_empty_grid(size):
-    return np.zeros((size//cell_size,size//cell_size), dtype=int)
+grid = np.zeros((n//cell_size,n//cell_size), dtype=int)
 
 
-def update_grid(oldGrid):
+def update_grid():
     return
 
 # Draw grid
-def draw_grid(screen, grid):
+def draw_grid(screen):
     for row in range(rows):
         for col in range(cols):
-            color = ALIVE_COLOR if grid[row, col] == 1 else DEAD_COLOR
-            pg.draw.rect(screen, color, (col * cell_size, row * cell_size, cell_size - 1, cell_size - 1))
+            if grid[row,col] == 1:
+                colour = alive_colour
+            else:
+                colour = dead_colour
+            pg.draw.rect(screen, colour,(col * cell_size, row * cell_size, cell_size - 1, cell_size - 1))
 
 # Update grid
 
@@ -48,8 +49,6 @@ def main():
     pg.init()
     screen = pg.display.set_mode((n,n))
     pg.display.set_caption("Cellular Automata: Conways's Game of Life")
-            
-    grid = build_empty_grid(n)
 
     running = True
     paused = False
@@ -72,22 +71,20 @@ def main():
                 # Reset board and pause
                 elif event.type == pg.K_r:
                     paused = True
-                    grid = build_empty_grid(n)
+                    grid = np.zeros((n//cell_size,n//cell_size), dtype=int)
             # User drawing
             elif event.type == pg.MOUSEBUTTONDOWN and paused:
                 x,y = pg.mouse.get_pos()
                 
             # Update grid for user
             if not paused:
-                grid = update_grid(grid)
+                update_grid()
             
             
 
                 
         screen.fill((0,0,0))
-        cell_rect = pg.Rect((10, 10), (cell_size,cell_size))
-        pg.draw.rect(screen, alive_colour, cell_rect)
-        draw_grid(screen,grid)
+        draw_grid(screen)
         pg.display.flip()
 
 
