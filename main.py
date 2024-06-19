@@ -23,6 +23,12 @@ interval = 10
 rows = n // 15
 cols = n // 15
 
+
+# py game initial setup
+pg.init()
+screen = pg.display.set_mode((n,n))
+pg.display.set_caption("Cellular Automata: Conways's Game of Life")
+clock = pg.time.Clock()
 grid =  np.zeros((n//cell_size,n//cell_size), dtype=int)
 
 
@@ -43,14 +49,16 @@ def sumNeighbours(i,j):
     ###
     # # 
     ### 
-    # max(0, i-1), min(rows-1, i+1)
-    # max(0, j-1), min(columns-1, j+1)
-    submatrix = grid[max(0, i-1) : min(rows-1, i+1), max(0, j-1) : min(cols-1, j+1)]
+    # max(0, i-1), min(rows-1, i+2)
+    # max(0, j-1), min(columns-1, j+2)
+
+    submatrix = grid[max(0, i-1):min(rows, i+2), max(0, j-1):min(cols, j+2)]
     return np.sum(submatrix) - grid[i,j]
 
 
 # Update grid
 def update_grid():
+    global grid
     for row in range(rows):
         for col in range(cols):
             # sum of alive neighbours > 3 to birth 
@@ -60,7 +68,7 @@ def update_grid():
                 # Over/underpopulation
                 if neighbours < 2 or neighbours > 3:
                     grid[row,col] = 0
-            # birth condition, other wise keep as alive
+            # birth condition, otherwise keep as alive
             else:
                 if neighbours == 3:
                     grid[row,col] = 1
@@ -70,14 +78,11 @@ def update_grid():
 
 def main():
     global grid
-    # py game initial setup
-    pg.init()
-    screen = pg.display.set_mode((n,n))
-    pg.display.set_caption("Cellular Automata: Conways's Game of Life")
-    clock = pg.time.Clock()
+    
+    screen.fill((0,0,0))
 
     running = True
-    paused = False
+    paused = True
 
     while running:
 
@@ -88,30 +93,30 @@ def main():
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
                     running = False
-                # Start if paused
-                elif event.key  == pg.K_SPACE and paused:
-                    paused = False
-                # Pause if start
-                elif event.type == pg.K_SPACE:
-                    paused = True
-                # Reset board and pause
+                # pause or unpause
+                elif event.key == pg.K_SPACE:
+                    paused = not paused
+                # Reset board and pause TODO: Fix
                 elif event.type == pg.K_r:
-                    paused = True
+                    print("Test")
                     grid = np.zeros((n//cell_size,n//cell_size), dtype=int)
             # User drawing
-            # Left button pressed
-            if pg.mouse.get_pressed()[0]: 
-                x, y = pg.mouse.get_pos()
-                col, row = x // cell_size, y // cell_size
-                grid[row, col] = 1 - grid[row, col]
-            
-            # Update grid for user
-            if paused == False:
-                update_grid()
-            
-            
+            if event.type == pg.MOUSEBUTTONDOWN and paused:
+                if event.button == 1: 
+                    x, y = pg.mouse.get_pos()
+                    col, row = x // cell_size, y // cell_size
+                    grid[row,col] = 1 - grid[row,col]
+            # Holding down the mouse to draw
+            if event.type == pg.MOUSEMOTION:
+                if pg.mouse.get_pressed()[0]:  
+                    x, y = pg.mouse.get_pos()
+                    col, row = x // cell_size, y // cell_size
+                    grid[row, col] = 1
 
-                
+        # Update grid for user
+        if paused == False:
+            update_grid()
+        
         screen.fill((0,0,0))
         draw_grid(screen)
         pg.display.flip()
