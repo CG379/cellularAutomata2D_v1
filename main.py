@@ -59,20 +59,21 @@ def sumNeighbours(i,j):
 # Update grid
 def update_grid():
     global grid
+    new_grid = np.copy(grid)
     for row in range(rows):
         for col in range(cols):
             # sum of alive neighbours > 3 to birth 
             # sum of alive neighbours > 2 survival of alive cell  
             neighbours = sumNeighbours(row,col)
-            if grid[row,col] == 1:
+            if new_grid[row,col] == 1:
                 # Over/underpopulation
                 if neighbours < 2 or neighbours > 3:
-                    grid[row,col] = 0
+                    new_grid[row,col] = 0
             # birth condition, otherwise keep as alive
             else:
                 if neighbours == 3:
-                    grid[row,col] = 1
-
+                    new_grid[row,col] = 1
+    grid = new_grid
                       
 
 
@@ -97,9 +98,9 @@ def main():
                 elif event.key == pg.K_SPACE:
                     paused = not paused
                 # Reset board and pause TODO: Fix
-                elif event.type == pg.K_r:
-                    print("Test")
+                elif event.key == pg.K_r:
                     grid = np.zeros((n//cell_size,n//cell_size), dtype=int)
+                    paused = True
             # User drawing
             if event.type == pg.MOUSEBUTTONDOWN and paused:
                 if event.button == 1: 
