@@ -128,3 +128,45 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
+
+
+
+# OOP Update:
+
+class Cell:
+    def __init__(self,row,col,size,alive_colour,dead_colour):
+        self.row = row
+        self.col = col
+        self.size = size
+        self.alive_colour = alive_colour
+        self.dead_colour = dead_colour
+        self.state = 0
+    
+    def change_state(self):
+        self.state = 1 - self.state
+
+    def colour(self,screen):
+        colour = self.alive_colour if self.state == 1 else self.dead_colour
+        #                               where the cell is drawn (x,y)                    width, height     
+        pg.draw.rect(screen, colour,(self.col * self.size, self.row * self.size, self.size - 1, self.size - 1))
+
+class Grid:
+    def __init__(self,row,col,size,alive_colour,dead_colour):
+        self.row = row
+        self.col = col
+        self.size = size
+        self.alive_colour = alive_colour
+        self.dead_colour = dead_colour
+        
+        self.cells = np.empty((rows, cols), dtype=object)
+        for row in range(rows):
+            for col in range(cols):
+                self.cells[row,col] = Cell(row, col, size, alive_color, dead_color)
