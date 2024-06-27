@@ -93,6 +93,9 @@ class GameOfLife:
 
         self.interval = 10
         self.paused = True
+
+    def is_within_bounds(self, row, col):
+        return 0 <= row < self.grid.rows and 0 <= col < self.grid.cols
                     
     def run(self):
         running = True
@@ -114,13 +117,15 @@ class GameOfLife:
                     if event.button == 1: 
                         x, y = pg.mouse.get_pos()
                         col, row = x // self.grid.size, y // self.grid.size
-                        self.grid.cells[row, col].change_state()
+                        if self.is_within_bounds(row, col):
+                            self.grid.cells[row, col].change_state()
                 # Holding down the mouse to draw
                 if event.type == pg.MOUSEMOTION and self.paused:
                     if pg.mouse.get_pressed()[0]:  
                         x, y = pg.mouse.get_pos()
                         col, row = x // self.grid.size, y // self.grid.size
-                        self.grid.cells[row, col].set_alive()
+                        if self.is_within_bounds(row, col):
+                            self.grid.cells[row, col].set_alive()
 
             if not self.paused:
                 self.grid.update()
