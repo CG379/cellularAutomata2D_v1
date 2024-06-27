@@ -27,12 +27,13 @@ class Cell:
     
     def set_alive(self):
         self.state = 1
+    
     def set_dead(self):
         self.state = 0
 
     def colour(self, screen):
         colour = self.alive_colour if self.state == 1 else self.dead_colour
-        pg.draw.rect(screen, colour, (self.col * self.size, self.row * self.size, self.size - 1, self.size - 1))
+        pg.draw.rect(screen, colour, (self.col * self.size, self.row * self.size + 60, self.size - 1, self.size - 1))
 
 class Grid:
     def __init__(self, rows, cols, size, alive_colour, dead_colour):
@@ -79,11 +80,34 @@ class Grid:
         for row in range(self.rows):
             for col in range(self.cols):
                 self.cells[row, col].colour(screen)
+        
+    def randomize(self):
+        for row in range(self.rows):
+            for col in range(self.cols):
+                self.cells[row, col].state = np.random.choice([0, 1])
+
+
+class Button:
+    def __init__(self, x, y, width, height, text, font, bg_color, text_color):
+        self.rect = pg.Rect(x, y, width, height)
+        self.text = text
+        self.font = font
+        self.bg_color = bg_color
+        self.text_color = text_color
+
+    def draw(self, screen):
+        pg.draw.rect(screen, self.bg_color, self.rect)
+        text_surf = self.font.render(self.text, True, self.text_color)
+        text_rect = text_surf.get_rect(center=self.rect.center)
+        screen.blit(text_surf, text_rect)
+
+    def is_clicked(self, pos):
+        return self.rect.collidepoint(pos)
 
 class GameOfLife:
     def __init__(self, width, height, cell_size):
         pg.init()
-        self.screen = pg.display.set_mode((width, height))
+        self.screen = pg.display.set_mode((width, height + 60))
         pg.display.set_caption("Cellular Automata: Conway's Game of Life")
         self.clock = pg.time.Clock()
 
@@ -94,9 +118,32 @@ class GameOfLife:
         self.interval = 10
         self.paused = True
 
+        # Define font for buttons
+        self.font = pg.font.Font(None, 36)
+
+        # Create buttons
+        self.buttons = []
+        button_texts = ['Start/Pause', 'Clear', 'Rand']
+        button_width = 150
+        button_height = 40
+        for i, text in enumerate(button_texts):
+            x_pos = (width // 4) * (i + 1) - (button_width // 2)
+            self.buttons.append(Button(x_pos, 10, button_width, button_height, text, self.font, (200, 200, 200), (0, 0, 0)))
+
     def is_within_bounds(self, row, col):
         return 0 <= row < self.grid.rows and 0 <= col < self.grid.cols
-                    
+
+    def handle_button_click(self, pos):
+        for button in self.buttons:
+            if button.is_clicked(pos):
+                if button.text == 'Start/Pause':
+                    self.paused = not self.paused
+                elif button.text == 'Clear':
+                    self.grid.clear()
+                    self.paused = True
+                elif button.text == 'Rand':
+                    self.grid.randomize()
+
     def run(self):
         running = True
 
@@ -107,40 +154,40 @@ class GameOfLife:
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_ESCAPE:
                         running = False
-                    elif event.key == pg.K_SPACE:
-                        self.paused = not self.paused
-                    elif event.key == pg.K_r:
-                        self.grid.clear()
-                        self.paused = True
-                # User drawing
-                if event.type == pg.MOUSEBUTTONDOWN and self.paused:
-                    if event.button == 1: 
-                        x, y = pg.mouse.get_pos()
-                        col, row = x // self.grid.size, y // self.grid.size
-                        if self.is_within_bounds(row, col):
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    pos = pg.mouse.get_pos()
+                    # If click is below button area
+                    if pos[1] > 60:  
+                        col, row = pos[0] // self.grid.size, (pos[1] - 60) // self.grid.size
+                        if self.is_within_bounds(row, col) and self.paused:
                             self.grid.cells[row, col].change_state()
-                # Holding down the mouse to draw
+                    else:
+                        self.handle_button_click(pos)
+
                 if event.type == pg.MOUSEMOTION and self.paused:
-                    if pg.mouse.get_pressed()[0]:  
-                        x, y = pg.mouse.get_pos()
-                        col, row = x // self.grid.size, y // self.grid.size
-                        if self.is_within_bounds(row, col):
-                            self.grid.cells[row, col].set_alive()
+                    if pg.mouse.get_pressed()[0]:
+                        pos = pg.mouse.get_pos()
+                        # If click is below button area
+                        if pos[1] > 60:  
+                            col, row = pos[0] // self.grid.size, (pos[1] - 60) // self.grid.size
+                            if self.is_within_bounds(row, col):
+                                self.grid.cells[row, col].set_alive()
 
             if not self.paused:
                 self.grid.update()
 
             self.screen.fill((0, 0, 0))
             self.grid.draw_grid(self.screen)
+            for button in self.buttons:
+                button.draw(self.screen)
             pg.display.flip()
             self.clock.tick(self.interval)
-            
+
         pg.quit()
 
 if __name__ == "__main__":
     game = GameOfLife(800, 800, 15)
     game.run()
-
 
 
 
