@@ -134,6 +134,7 @@ class GameOfLife:
         return 0 <= row < self.grid.rows and 0 <= col < self.grid.cols
 
     def handle_button_click(self, pos):
+        # Button cases
         for button in self.buttons:
             if button.is_clicked(pos):
                 if button.text == 'Start/Pause':
@@ -151,6 +152,7 @@ class GameOfLife:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     running = False
+                # Quit condition
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_ESCAPE:
                         running = False
@@ -159,6 +161,7 @@ class GameOfLife:
                     # If click is below button area
                     if pos[1] > 60:  
                         col, row = pos[0] // self.grid.size, (pos[1] - 60) // self.grid.size
+                        # draw
                         if self.is_within_bounds(row, col) and self.paused:
                             self.grid.cells[row, col].change_state()
                     else:
@@ -167,7 +170,7 @@ class GameOfLife:
                 if event.type == pg.MOUSEMOTION and self.paused:
                     if pg.mouse.get_pressed()[0]:
                         pos = pg.mouse.get_pos()
-                        # If click is below button area
+                        # hold down to draw
                         if pos[1] > 60:  
                             col, row = pos[0] // self.grid.size, (pos[1] - 60) // self.grid.size
                             if self.is_within_bounds(row, col):
