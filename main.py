@@ -52,13 +52,16 @@ class Grid:
         new_grid = np.empty((self.rows, self.cols), dtype=object)
         for row in range(self.rows):
             for col in range(self.cols):
+                # Create new cell
                 new_grid[row, col] = Cell(row, col, self.size, self.alive_colour, self.dead_colour)
                 new_grid[row, col].state = self.cells[row, col].state
                 neighbours = self.sum_neighbours(row, col)
                 if self.cells[row, col].state == 1:
+                    # Over/under population conditions
                     if neighbours < 2 or neighbours > 3:
                         new_grid[row, col].set_dead()
                 else:
+                    # Cell birth
                     if neighbours == 3:
                         new_grid[row, col].set_alive()
         self.cells = new_grid
@@ -81,7 +84,7 @@ class Grid:
             for col in range(self.cols):
                 self.cells[row, col].colour(screen)
         
-    def randomize(self):
+    def randomise(self):
         for row in range(self.rows):
             for col in range(self.cols):
                 self.cells[row, col].state = np.random.choice([0, 1])
@@ -106,11 +109,12 @@ class Button:
 
 class GameOfLife:
     def __init__(self, width, height, cell_size):
+        # pygame setup
         pg.init()
         self.screen = pg.display.set_mode((width, height + 60))
         pg.display.set_caption("Cellular Automata: Conway's Game of Life")
         self.clock = pg.time.Clock()
-
+        # Constants 
         self.alive_color = (30, 200, 0)
         self.dead_color = (30, 30, 30)
         self.grid = Grid(width // cell_size, height // cell_size, cell_size, self.alive_color, self.dead_color)
@@ -118,10 +122,10 @@ class GameOfLife:
         self.interval = 10
         self.paused = True
 
-        # Define font for buttons
+        # buttons font
         self.font = pg.font.Font(None, 36)
 
-        # Create buttons
+        #buttons
         self.buttons = []
         button_texts = ['Start/Pause', 'Clear', 'Rand']
         button_width = 150
@@ -143,7 +147,7 @@ class GameOfLife:
                     self.grid.clear()
                     self.paused = True
                 elif button.text == 'Rand':
-                    self.grid.randomize()
+                    self.grid.randomise()
 
     def run(self):
         running = True
@@ -158,10 +162,10 @@ class GameOfLife:
                         running = False
                 if event.type == pg.MOUSEBUTTONDOWN:
                     pos = pg.mouse.get_pos()
-                    # If click is below button area
+                    # click is below button area
                     if pos[1] > 60:  
                         col, row = pos[0] // self.grid.size, (pos[1] - 60) // self.grid.size
-                        # draw
+                        # press to draw
                         if self.is_within_bounds(row, col) and self.paused:
                             self.grid.cells[row, col].change_state()
                     else:
@@ -170,7 +174,7 @@ class GameOfLife:
                 if event.type == pg.MOUSEMOTION and self.paused:
                     if pg.mouse.get_pressed()[0]:
                         pos = pg.mouse.get_pos()
-                        # hold down to draw
+                        # hold to draw
                         if pos[1] > 60:  
                             col, row = pos[0] // self.grid.size, (pos[1] - 60) // self.grid.size
                             if self.is_within_bounds(row, col):
@@ -181,8 +185,10 @@ class GameOfLife:
 
             self.screen.fill((0, 0, 0))
             self.grid.draw_grid(self.screen)
+            # Draw buttons
             for button in self.buttons:
                 button.draw(self.screen)
+            # Refresh screen
             pg.display.flip()
             self.clock.tick(self.interval)
 
