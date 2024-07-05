@@ -12,6 +12,7 @@ B3/S23  birth of a cell needs 3 neighbours, survival of a cell needs 2 or 3 neig
 
 import numpy as np
 import pygame as pg
+import tensorflow as tf
 
 class Cell:
     def __init__(self, row, col, size, alive_colour, dead_colour):
