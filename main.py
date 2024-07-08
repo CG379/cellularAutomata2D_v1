@@ -13,6 +13,8 @@ B3/S23  birth of a cell needs 3 neighbours, survival of a cell needs 2 or 3 neig
 import numpy as np
 import pygame as pg
 import tensorflow as tf
+from tensorflow.keras import layers
+
 
 class Cell:
     def __init__(self, row, col, size, alive_colour, dead_colour):
@@ -35,6 +37,35 @@ class Cell:
     def colour(self, screen):
         colour = self.alive_colour if self.state == 1 else self.dead_colour
         pg.draw.rect(screen, colour, (self.col * self.size, self.row * self.size + 60, self.size - 1, self.size - 1))
+
+
+class NeuralModel:
+    def __init__(self):
+        self.model = self.build_model()
+
+    def build(self):
+        # input = 8 neighbours + 1 cell state
+        # Output layer 1 or 0 = sigmoid
+        # 1-5 hidden layers adn 10-100 each, source Hands-on Machine Learning
+        # Decreasing by 1/3 per layer?
+        # TODO: Figure out why for hidden layers
+        model = tf.keras.Sequential([
+            layers.Input(shape =(9,)),
+            layers.Dense(30, activation='relu'),
+            layers.Dense(10, activation='relu'),
+            layers.Dense(1, activation='sigmoid')
+        ])
+        # Compile model
+        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])  
+        return model
+
+    def predict(self,input):
+        return self.model.predict(input)
+    
+    def train(self,X,y,epochs=10):
+        self.model.fit(X,y,epochs=epochs)
+
+
 
 class Grid:
     def __init__(self, rows, cols, size, alive_colour, dead_colour):
