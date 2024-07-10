@@ -66,7 +66,6 @@ class NeuralModel:
         self.model.fit(X,y,epochs=epochs)
 
 
-
 class Grid:
     def __init__(self, rows, cols, size, alive_colour, dead_colour):
         self.rows = rows
@@ -74,7 +73,8 @@ class Grid:
         self.size = size
         self.alive_colour = alive_colour
         self.dead_colour = dead_colour
-        
+        self.neural_model = NeuralModel()
+
         self.cells = np.empty((rows, cols), dtype=object)
         for row in range(rows):
             for col in range(cols):
@@ -85,17 +85,15 @@ class Grid:
         for row in range(self.rows):
             for col in range(self.cols):
                 # Create new cell
-                new_grid[row, col] = Cell(row, col, self.size, self.alive_colour, self.dead_colour)
-                new_grid[row, col].state = self.cells[row, col].state
-                neighbours = self.sum_neighbours(row, col)
-                if self.cells[row, col].state == 1:
-                    # Over/under population conditions
-                    if neighbours < 2 or neighbours > 3:
-                        new_grid[row, col].set_dead()
-                else:
-                    # Cell birth
-                    if neighbours == 3:
-                        new_grid[row, col].set_alive()
+                new_grid[row, col] = Cell(row, col, self.size, self.alive_colour, self.dead_colour)  # Create a new cell
+                # Get the states of the neighbors
+                neighbors = self.get_neighbors(row, col)  
+                # Prepare input for the neural network
+                prediction_input = np.array(neighbors).reshape(1, -1)
+                # Predict the next state
+                prediction = self.neural_model.predict(prediction_input)[0, 0] 
+                # Update the cell state based on prediction
+                new_grid[row, col].state = 1 if prediction > 0.5 else 0  
         self.cells = new_grid
 
     def sum_neighbours(self, i, j):
@@ -106,6 +104,18 @@ class Grid:
         submatrix = self.cells[a:b, c:d]
         return np.sum([cell.state for row in submatrix for cell in row]) - self.cells[i, j].state
     
+    def get_neighbors(self, row, col):
+        neighbors = []
+        for i in range(row - 1, row + 2):
+            for j in range(col - 1, col + 2):
+                if 0 <= i < self.rows and 0 <= j < self.cols:
+                    # Add neighbor's state to the list
+                    neighbors.append(self.cells[i, j].state)  
+                else:
+                    # Out of bounds cells are considered dead
+                    neighbors.append(0)  
+        return neighbors
+
     def clear(self):
         for row in range(self.rows):
             for col in range(self.cols):
