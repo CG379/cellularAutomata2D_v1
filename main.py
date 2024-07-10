@@ -40,10 +40,13 @@ class Cell:
 
 
 class NeuralModel:
-    def __init__(self):
-        self.model = self.build_model()
+    def __init__(self, model_path=None):
+        if model_path:
+            self.model = tf.keras.models.load_model(model_path)
+        else:
+            self.model = self.build_model()
 
-    def build(self):
+    def build_model(self):
         # input = 8 neighbours + 1 cell state
         # Output layer 1 or 0 = sigmoid
         # 1-5 hidden layers adn 10-100 each, source Hands-on Machine Learning
@@ -64,6 +67,10 @@ class NeuralModel:
     
     def train(self,X,y,epochs=10):
         self.model.fit(X,y,epochs=epochs)
+    
+    def save_model(self, path):
+        self.model.save(path)
+
 
 
 class Grid:
@@ -80,30 +87,27 @@ class Grid:
             for col in range(cols):
                 self.cells[row, col] = Cell(row, col, size, alive_colour, dead_colour)
 
+
     def update(self):
         new_grid = np.empty((self.rows, self.cols), dtype=object)
+        prediction_inputs = []
+        positions = []
+
         for row in range(self.rows):
             for col in range(self.cols):
-                # Create new cell
-                new_grid[row, col] = Cell(row, col, self.size, self.alive_colour, self.dead_colour)  # Create a new cell
-                # Get the states of the neighbors
-                neighbors = self.get_neighbors(row, col)  
-                # Prepare input for the neural network
-                prediction_input = np.array(neighbors).reshape(1, -1)
-                # Predict the next state
-                prediction = self.neural_model.predict(prediction_input)[0, 0] 
-                # Update the cell state based on prediction
-                new_grid[row, col].state = 1 if prediction > 0.5 else 0  
+                new_grid[row, col] = Cell(row, col, self.size, self.alive_colour, self.dead_colour)
+                neighbors = self.get_neighbors(row, col)
+                prediction_inputs.append(neighbors)
+                positions.append((row, col))
+
+        prediction_inputs = np.array(prediction_inputs)
+        predictions = self.neural_model.predict(prediction_inputs)
+
+        for i, (row, col) in enumerate(positions):
+            new_grid[row, col].state = 1 if predictions[i, 0] > 0.5 else 0
+
         self.cells = new_grid
 
-    def sum_neighbours(self, i, j):
-        a = max(0, i - 1)
-        b = min(self.rows, i + 2)
-        c = max(0, j - 1)
-        d = min(self.cols, j + 2)
-        submatrix = self.cells[a:b, c:d]
-        return np.sum([cell.state for row in submatrix for cell in row]) - self.cells[i, j].state
-    
     def get_neighbors(self, row, col):
         neighbors = []
         for i in range(row - 1, row + 2):
@@ -115,6 +119,15 @@ class Grid:
                     # Out of bounds cells are considered dead
                     neighbors.append(0)  
         return neighbors
+
+    def sum_neighbours(self, i, j):
+        a = max(0, i - 1)
+        b = min(self.rows, i + 2)
+        c = max(0, j - 1)
+        d = min(self.cols, j + 2)
+        submatrix = self.cells[a:b, c:d]
+        return np.sum([cell.state for row in submatrix for cell in row]) - self.cells[i, j].state
+    
 
     def clear(self):
         for row in range(self.rows):
@@ -161,7 +174,7 @@ class GameOfLife:
         self.dead_color = (30, 30, 30)
         self.grid = Grid(width // cell_size, height // cell_size, cell_size, self.alive_color, self.dead_color)
 
-        self.interval = 10
+        self.interval = 1
         self.paused = True
 
         # buttons font
@@ -236,6 +249,37 @@ class GameOfLife:
 
         pg.quit()
 
+
+def generate_training_data(grid, steps):
+    X = []
+    y = []
+    for _ in range(steps):
+        for row in range(grid.rows):
+            for col in range(grid.cols):
+                neighbors = grid.get_neighbors(row, col)
+                X.append(neighbors)
+                alive_neighbors = sum(neighbors) - grid.cells[row, col].state
+                next_state = 1 if (grid.cells[row, col].state == 1 and alive_neighbors in [2, 3]) or (grid.cells[row, col].state == 0 and alive_neighbors == 3) else 0
+                y.append(next_state)
+        grid.update()
+    return np.array(X), np.array(y)
+
+
+
+
 if __name__ == "__main__":
     game = GameOfLife(800, 800, 15)
+    # Generate training data
+    X, y = generate_training_data(game.grid, steps=100)
+    try:
+        # Load the model and use it in the game
+        game.grid.neural_model = NeuralModel(model_path='neural_model.h5')
+    except:
+        # Train and save the model
+        neural_model = NeuralModel()
+        neural_model.train(X, y, epochs=5)
+        neural_model.save_model('neural_model.h5')
+        # Load the model and use it in the game
+        game.grid.neural_model = NeuralModel(model_path='neural_model.h5')
+    
     game.run()
